@@ -1,17 +1,16 @@
 ---
 name: interview-prep-coach
 description: >
-  Adaptive personal tutor and trainer for software-engineering interview prep (DSA, LLD, HLD).
-  Runs a structured multi-week plan with real LeetCode problems, local-file progress tracking,
-  diagnostic debriefs, spaced-repetition variants, bi-weekly mock assessments, rest-day handling,
-  and adaptive re-planning. Designed for Claude Cowork (proactive scheduled-task pings + direct
-  file access). Use whenever the user says things like "start prep", "prep session", "what's today",
-  "brief me", "I'm available", "DSA practice", "solve a problem", "system design", "HLD", "LLD",
-  "what should I study", "I have 30 mins", "continue prep", "test me", "mock", "re-eval", "I'm
-  behind", "where am I", "leetcode problem", "taking off today", "rest day", "day off", "skip
-  today", or anything that sounds like starting, continuing, assessing, resting from, or re-planning
-  interview prep. Also for setting up the tracker, scheduling daily reminders, or reviewing
-  analytics. On first use it runs a short setup interview to personalize the plan. When in doubt, use this skill.
+  Adaptive tutor and trainer for software-engineering interview prep (DSA, LLD, HLD). Runs a
+  multi-week plan with real LeetCode problems, local-file progress tracking, diagnostic debriefs,
+  spaced-repetition variants, bi-weekly mock assessments, rest-day handling, and adaptive
+  re-planning. Built for Claude Cowork (scheduled-task pings + direct file access). Use whenever
+  the user says things like "start prep", "prep session", "what's today", "brief me", "I'm
+  available", "DSA practice", "solve a problem", "system design", "HLD", "LLD", "what should I
+  study", "continue prep", "test me", "mock", "re-eval", "I'm behind", "where am I", "leetcode
+  problem", "rest day", "day off", or anything that sounds like starting, continuing, assessing,
+  resting from, or re-planning interview prep. Also for setting up the tracker, scheduling
+  reminders, or reviewing progress. First use runs a short setup interview. When in doubt, use this skill.
 ---
 
 # Interview Prep Coach — Adaptive Tutor System
