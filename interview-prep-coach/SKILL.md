@@ -1,16 +1,18 @@
 ---
 name: interview-prep-coach
 description: >
-  Adaptive tutor and trainer for software-engineering interview prep (DSA, LLD, HLD). Runs a
-  multi-week plan with real LeetCode problems, local-file progress tracking, diagnostic debriefs,
-  spaced-repetition variants, bi-weekly mock assessments, rest-day handling, and adaptive
-  re-planning. Built for Claude Cowork (scheduled-task pings + direct file access). Use whenever
-  the user says things like "start prep", "prep session", "what's today", "brief me", "I'm
-  available", "DSA practice", "solve a problem", "system design", "HLD", "LLD", "what should I
-  study", "continue prep", "test me", "mock", "re-eval", "I'm behind", "where am I", "leetcode
-  problem", "rest day", "day off", or anything that sounds like starting, continuing, assessing,
-  resting from, or re-planning interview prep. Also for setting up the tracker, scheduling
-  reminders, or reviewing progress. First use runs a short setup interview. When in doubt, use this skill.
+  Adaptive tutor and trainer for software-engineering interview prep — backend (DSA, LLD, HLD)
+  and frontend (DSA in JS/TS, React/browser deep dives, component design, frontend system design).
+  Runs a role-specific multi-week plan with real LeetCode problems, local-file progress tracking,
+  diagnostic debriefs, spaced-repetition variants, bi-weekly mock assessments, rest-day handling,
+  and adaptive re-planning. Built for Claude Cowork (scheduled-task pings + direct file access).
+  Use whenever the user says things like "start prep", "prep session", "what's today", "brief me",
+  "I'm available", "DSA practice", "solve a problem", "system design", "HLD", "LLD", "frontend
+  design", "component design", "React interview", "JS fundamentals", "what should I study",
+  "continue prep", "test me", "mock", "re-eval", "I'm behind", "where am I", "leetcode problem",
+  "rest day", "day off", or anything that sounds like starting, continuing, assessing, resting
+  from, or re-planning interview prep. Also for setting up the tracker, scheduling reminders, or
+  reviewing progress. First use runs a short setup interview. When in doubt, use this skill.
 ---
 
 # Interview Prep Coach — Adaptive Tutor System
@@ -30,19 +32,23 @@ The tracker is **local files in the `Interview-Prep/` folder** that Claude reads
 ## First-Run Setup (do once) — the setup interview
 
 On first use, personalize the plan with a SHORT interview (use a tap/select UI if available). Ask:
-1. **Target role & companies** (e.g., SDE-2 backend at FAANG; new-grad; senior).
-2. **Timeline** (how many weeks until interviews / target date).
-3. **Weekday capacity** (e.g., 30–45 min) and **weekend capacity** (e.g., 2–3 hr).
-4. **Current DSA level** (rusty / patterns weak / mediums ok / strong).
-5. **Weakest areas** (DSA topics / HLD / LLD / consistency).
-6. **Start date** and **preferred study times** (for the scheduled-task ping).
+1. **Role type** (Backend SWE / Frontend SWE / Fullstack). This determines the entire curriculum — ask this first.
+2. **Target level & companies** (e.g., SDE-2 at FAANG; new-grad; senior frontend at a product startup).
+3. **Timeline** (how many weeks until interviews / target date).
+4. **Weekday capacity** (e.g., 30–45 min) and **weekend capacity** (e.g., 2–3 hr).
+5. **Current DSA level** (rusty / patterns weak / mediums ok / strong) — applies to all roles.
+6. **Role-specific weak areas:**
+   - *Backend:* DSA topics / HLD / LLD / consistency
+   - *Frontend:* JS/TS fundamentals / React internals / browser concepts / frontend system design / CSS / accessibility
+   - *Fullstack:* both sets above; which side feels weaker
+7. **Start date** and **preferred study times** (for the scheduled-task ping).
 
 Then bootstrap (Cowork = local files):
 1. Create a project folder **`Interview-Prep/`**.
 2. Generate the date-mapped tracker by running `scripts/generate_schedule.py --start <date> --weeks <n> [--assessments ...]` → `tracker.csv`. (Assessment Saturdays default to the ends of weeks 2/4/6/8.)
-3. Copy `assets/progress.md` and `assets/mastery.md` into the folder; fill `progress.md` with the user's config from the interview (role, timeline, capacities, times, start/end dates).
-4. Adjust scope to their level: rusty → add concept days; strong → more volume / harder problems; reweight toward their weak areas.
-5. Show them Day 1 and point them to set up the Cowork Scheduled Task (`references/tutor-system.md` Part 10) at their chosen times.
+3. Copy `assets/progress.md` and `assets/mastery.md` into the folder; fill `progress.md` with the user's config — including their **role type** (Backend / Frontend / Fullstack) as the first field.
+4. Adjust scope to their level and role: rusty on DSA → add concept days; strong → more volume / harder problems; for frontend, reweight toward JS/React depth or FSD based on weak areas.
+5. Show them Day 1 (role-appropriate: backend gets DSA + HLD plan; frontend gets JS/React + FSD plan) and point them to set up the Cowork Scheduled Task (`references/tutor-system.md` Part 10) at their chosen times.
 6. (Optional, only if asked) set up a Notion mirror.
 
 From then on, Claude reads and writes these files directly each session — no connectors required, no paste step.
@@ -70,13 +76,24 @@ From then on, Claude reads and writes these files directly each session — no c
 3. **Review + debrief** — complexity, edge cases, cleaner approach. Then run the short **diagnostic debrief** (`tutor-system.md` Part 11): ~3 quick questions on how it landed and where the friction was. Use it to set confidence and, if shaky, queue a same-pattern *variant* problem 3–5 days out.
 4. **Log + commit** (see Logging below).
 
-### Weekend (2–3 hrs) — pick based on curriculum
+### Weekend (2–3 hrs) — pick based on curriculum and role
+
+**Backend:**
 - **DSA deep block:** 2–3 problems easy→medium→hard, debrief each.
-- **HLD session:** load `references/hld-framework.md`, run it as a mock — they talks through the 6 steps, you correct and deep-dive one component.
+- **HLD session:** load `references/hld-framework.md`, run it as a mock — they talk through the 6 steps, you correct and deep-dive one component.
 - **LLD session:** requirements → entities → relationships → class skeleton → patterns → edge cases.
+
+**Frontend:**
+- **DSA deep block:** same format, but solve in JavaScript/TypeScript; include runtime nuances (e.g., Map vs Object, Set usage, array mutation) in debrief.
+- **Frontend System Design (FSD) session:** load `references/frontend-system-design.md`, run it as a mock — they talk through the 5-step FSD framework (requirements → component architecture → state design → API/data fetching → performance/a11y), you correct and deep-dive.
+- **Component Design (Frontend LLD) session:** pick a complex UI component from `references/frontend-system-design.md` "Component Design" section. Walk through: requirements → API surface → state model → edge cases → accessibility.
+
+**Fullstack:** alternate backend and frontend weekend types per the hybrid curriculum. If one side is weaker, tilt more sessions toward it.
 
 ### Test weekend (Days 14, 28, 42, 56, or on request)
 Run the assessment protocol in `tutor-system.md` Part 5 — timed, no hints during measurement, score out of 5, log to Assessments tab, compare to last time, feed weak areas back into the plan.
+
+For **frontend** assessments, the format shifts accordingly (see `tutor-system.md` Part 5 frontend variant): DSA problems solved in JS/TS, plus a JS/browser concept quiz, plus a frontend system design or component design challenge.
 
 ---
 
@@ -124,14 +141,36 @@ Handle the mechanics yourself; only ask the user for real decisions (availabilit
 The way to "ping" the user is a **Cowork Scheduled Task** on Claude Desktop (paid plan) that runs the daily brief on a cadence (weekdays 9 PM, weekends 3 PM). Setup + the exact task prompt are in `tutor-system.md` Part 10. When a scheduled run fires, produce the full brief with today's LeetCode problem ready to go.
 
 ## What to load when
+
+### All roles
 | Situation | Load |
 |-----------|------|
 | Any session start / briefing / logging / assessment / re-plan / rest / scheduling | `references/tutor-system.md` |
 | Picking the day's problem | `references/leetcode-bank.md` |
-| DSA concept or problem | `references/dsa-patterns.md` |
-| HLD session | `references/hld-framework.md` |
+| DSA concept or problem (any role) | `references/dsa-patterns.md` |
 | Where am I / what's next / schedule | `references/curriculum.md` |
+
+### Backend role
+| Situation | Load |
+|-----------|------|
+| HLD session | `references/hld-framework.md` |
 | LLD session | LLD structure in this file + tutor-system pedagogy |
 
+### Frontend role
+| Situation | Load |
+|-----------|------|
+| JS/TS/React concept or problem | `references/frontend-patterns.md` |
+| Frontend system design (FSD) session | `references/frontend-system-design.md` |
+| Component design session (frontend LLD) | `references/frontend-system-design.md` (Component Design section) |
+| Frontend-specific curriculum / schedule | `references/frontend-curriculum.md` |
+
+### Fullstack role
+Load backend or frontend references as appropriate for today's session type; use `references/curriculum.md` for the hybrid schedule.
+
 ## Target bar
-Target bar (typical SDE-2 / mid-level SWE at top companies): LeetCode medium fluently + hard with hints; coherent 45-min HLD with tradeoffs; clean LLD with SOLID; thinking out loud as much as the answer.
+
+**Backend (SDE-2 / mid-level at top companies):** LeetCode medium fluently + hard with hints; coherent 45-min HLD with tradeoffs; clean LLD with SOLID; thinking out loud as much as the answer.
+
+**Frontend (mid-level at top product companies):** LeetCode mediums in JS/TS fluently; able to explain event loop, closure, prototype chain, and React reconciliation cold; coherent 45-min frontend system design with component architecture + state decisions + performance tradeoffs; component design with clean API surface, edge cases, and accessibility; CSS layout and browser internals solid.
+
+**Fullstack:** meet both bars — identify which side is being tested per interview round and bring the right depth.

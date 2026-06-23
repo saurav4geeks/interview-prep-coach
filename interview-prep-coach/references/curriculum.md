@@ -1,4 +1,6 @@
-# 60-Day SDE-2 Prep Curriculum
+# 60-Day SDE-2 Prep Curriculum — Backend Role
+
+> **Role branching:** This file covers the **Backend** curriculum. For Frontend, load `references/frontend-curriculum.md` instead. For Fullstack, use this file as the base and weave in frontend-curriculum.md weekend blocks, tilting toward whichever side is weaker.
 
 ## Structure
 - **Weekdays (Mon–Fri):** 30–45 min → 1 pattern concept + 1 guided problem

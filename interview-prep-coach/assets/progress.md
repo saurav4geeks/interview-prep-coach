@@ -3,11 +3,12 @@
 At-a-glance state file. Claude reads it FIRST every run and rewrites it at session end. Keep it short and current.
 
 ## Config (filled during setup interview)
+- **Role type:** <Backend / Frontend / Fullstack>
 - **Target role / companies:** <fill>
 - **Timeline:** <n> weeks (end date <date>)
 - **Weekday capacity:** <e.g. 30-45 min @ time>
 - **Weekend capacity:** <e.g. 2-3 hr @ time>
-- **Current level:** <fill>
+- **Current DSA level:** <fill>
 - **Weak areas:** <fill>
 
 ## Status
