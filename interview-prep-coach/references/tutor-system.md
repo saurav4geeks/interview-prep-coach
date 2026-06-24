@@ -1,6 +1,6 @@
 # Tutor System: Methodology, Tracking & Adaptive Logic
 
-This file is the operating core of the tutor system. Read it at the start of any session that involves the daily briefing, progress logging, assessments, or re-planning. Problems come from `references/leetcode-bank.md` (real LeetCode problems by topic). See Part 8 for rest-day shifts, Part 9 for autonomy/permissions, Part 10 for the scheduled-task ping.
+This file is the operating core of the tutor system. Read it at the start of any session that involves the daily briefing, progress logging, assessments, or re-planning. Problems come from `references/leetcode-bank.md` (real LeetCode problems by topic). See Part 8 for rest-day shifts, Part 9 for autonomy/permissions, Part 10 for the concurrency curriculum block, Part 11 for the scheduled-task ping.
 
 ---
 
@@ -69,7 +69,7 @@ When the user opens a session ("what's today", "brief me", "today", "I'm here", 
 1. **Read `progress.md`** (state) and the relevant row(s) of `tracker.csv` to determine current state.
 2. **Deliver the briefing** — concise:
    ```
-   📅 Day X of 60 — [Week N: Topic Theme]
+   📅 Day X of [total] — [Week N: Topic Theme]
 
    Today's session: [specific topic + problem type]
    Estimated time: [30–45 min weekday / 2–3 hr weekend]
@@ -77,6 +77,7 @@ When the user opens a session ("what's today", "brief me", "today", "I'm here", 
    Status: [streak] day streak · [X]% through plan · [on track / behind by N]
    [If behind or weak area flagged: one line on what needs attention]
    ```
+   The `[total]` is the user's plan length — read it from the `Total Days` field in `progress.md` (set at first-run based on their timeline). Never hard-code 60.
 3. **Ask the availability check:**
    > "Available for today's session? (yes / partial — less time / re-eval — need to adjust the plan)"
 
@@ -100,7 +101,7 @@ Run the **Re-Planning Routine**:
    - Which topics are still `Not Started` or `Needs Revision`
 2. Diagnose honestly: "You're N sessions behind. Here's why that matters: [exam date / coverage]."
 3. Offer 2–3 concrete options, e.g.:
-   - **Triage:** cut lower-priority topics (e.g., advanced bit manipulation, niche DP), keep the high-frequency interview topics. Stay on the 60-day timeline.
+   - **Triage:** cut lower-priority topics (e.g., advanced bit manipulation, niche DP), keep the high-frequency interview topics. Stay on the original timeline.
    - **Extend:** push the timeline by N days/weeks to keep full coverage.
    - **Intensify:** add one extra weekday session or a longer weekend block (only if realistic).
 4. Let the user choose. Then **rewrite the remaining schedule** and update the tracker + calendar to match.
@@ -112,17 +113,33 @@ Run the **Re-Planning Routine**:
 
 Run a formal assessment at the end of **weeks 2, 4, 6, and 8** (Days 14, 28, 42, 56). Also run one anytime the user asks "test me" or after a major topic block.
 
-### Format scales with progress:
+**Important (M4):** An assessment day **replaces** that day's regular topic session — it does not stack on top of it. When Day 14 (or 28/42/56) arrives in the tracker, the row's Session Type is `Assessment`, not a regular topic. The regular topic that would have been on that day is silently skipped (assessments cover the same material anyway). Do not try to fit both a topic session and an assessment in one day.
+
+### Backend assessment format (scales with progress):
 - **Assessment 1 (Day 14):** 2 DSA problems, timed 35 min each. Topics: arrays, strings, hashmaps.
 - **Assessment 2 (Day 28):** 2 DSA problems (45 min each) covering LL/stack/tree/binary-search. + light HLD discussion (URL shortener walk-through).
 - **Assessment 3 (Day 42):** 2 DSA (graphs + DP, 45 min) + 1 full HLD (45 min).
 - **Assessment 4 (Day 56):** Full mock — 2 DSA hard-ish + 1 HLD + 1 LLD. Interview simulation.
 
+### Frontend assessment format (scales with progress):
+- **Assessment 1 (Day 14):** 2 DSA problems solved in JS/TS (35 min each), topics: arrays, hashmaps, strings. + 10-min JS fundamentals quiz: closures, `this`, event loop, `var`/`let`/`const`.
+- **Assessment 2 (Day 28):** 2 DSA (45 min each, JS/TS) covering LL/stack/tree. + Component design challenge (30 min): design a reusable component (e.g., Autocomplete, Modal, Infinite Scroll) — requirements, prop API, state model, edge cases, a11y.
+- **Assessment 3 (Day 42):** 2 DSA (JS/TS, 45 min each, graphs + DP). + Frontend System Design (45 min): design a frontend-heavy system (e.g., News Feed, Google Docs collaboration layer, YouTube frontend). Cover component arch, state design, data fetching, performance, a11y.
+- **Assessment 4 (Day 56):** Full mock — 2 DSA hard (JS/TS) + 1 FSD + 1 Component Design (advanced). Browser internals question: e.g., "explain what happens when you type a URL and press Enter" or "how does React reconciliation work?"
+
+### Fullstack assessment format:
+Alternate backend and frontend formats across assessments (Assessment 1 → backend, Assessment 2 → frontend, etc.), or tilt toward the weaker side if the user's profile says one side needs more work.
+
+### Problem selection (avoid repeats):
+- **DSA:** Check the tracker Notes column for previously solved problems. Pick from `references/leetcode-bank.md` mock sets — always pick problems the user has NOT solved before. If the bank is exhausted for a topic, generate a fresh unseen LeetCode problem of equivalent difficulty.
+- **HLD:** Pick a system from `references/hld-framework.md` the user hasn't designed before. Check Assessments tab for previously used systems.
+- **LLD:** Pick from the tier-appropriate list in `references/lld-framework.md` Assessment Problems section. Check Assessments tab for previously used problems.
+
 ### How to run it:
 1. Present problems one at a time, timed. Do NOT give hints during the timed portion (it's a measurement, not practice).
 2. After time's up, review: correctness, complexity, what they missed.
 3. **Score each** out of 5 on: correctness, optimality, code clarity, communication.
-4. **Log to the Assessments tab** with weak areas identified.
+4. **Log to the Assessments tab** with weak areas identified and problems used (so future assessments don't repeat them).
 5. **Compare to previous assessment** — is the trend up? Call it out explicitly: "Your graph solving went from needing full hints to solving in 40 min — that's real progress."
 6. **Feed weak areas back into the plan** — low-scoring topics get extra sessions in the next sprint, and get marked `Needs Revision` in Topic Mastery for spaced repetition.
 
@@ -183,54 +200,33 @@ So a normal day is: brief → one-word availability answer → run session → C
 
 ---
 
-## Part 10: The Scheduled-Task Ping (proactive reminders)
+## Part 10: Backend Concurrency Curriculum Block
 
-Claude cannot message the user out of the blue from a normal chat. The mechanism that makes the tutor *proactive* is **Cowork Scheduled Tasks** on the Claude Desktop app (paid plan). A scheduled task runs a saved prompt on a chosen cadence (e.g., weekdays 9 PM, weekends 3 PM), each as its own session, with the output waiting for the user.
+Concurrency is consistently tested at SDE-2 and above and is absent from most DSA-focused plans. Weave it into the backend curriculum as a **dedicated weekend block** in Week 5 or 6 (after graphs/DP, before the final mock):
 
-**Setup (the user does this once, in the Desktop app):**
-1. Open Cowork → use the schedule feature (`/schedule` or the Scheduled section).
-2. Create two tasks (or one with a weekday/weekend cadence):
-   - **Weekday brief** — cadence: weekdays, 9:00 PM.
-   - **Weekend brief** — cadence: Sat & Sun, 3:00 PM.
-3. Paste this as the task prompt:
+**Session goal:** be able to reason about concurrency problems verbally and apply the right primitive without memorizing Java API signatures.
 
-   > "Using my interview-prep-coach skill, run my daily prep brief. Read progress.md and tracker.csv in my Interview-Prep folder, figure out today's day number and topic, pick the specific LeetCode problem(s) for today (name + number + link) from the problem bank, and lay out today's session so it's ready for me to start. Note my streak and whether I'm on track. If I marked a rest day or missed sessions, adjust the plan and the files first. End by asking: available / partial / rest / re-eval?"
+**Concept coverage (1.5–2 hr block):**
 
-**When a scheduled run fires**, Claude reads the project files, produces the full briefing per Part 3 with the LeetCode problem ready, and (if a rest/miss needs handling) updates the files first — so when the user opens the app, today's session is already prepared and the tracker is current. He just replies with his availability and starts.
+1. **Thread basics** — thread vs process, context switch, why concurrency is hard (shared mutable state).
+2. **Locks / Mutex** — `synchronized` in Java / `threading.Lock` in Python / `Mutex` in Go. When to use. Granularity: method-level vs block-level.
+3. **Deadlock** — necessary conditions (mutual exclusion, hold-and-wait, no preemption, circular wait). Prevention: always acquire locks in the same fixed order.
+4. **Semaphore** — counting semaphore for capacity control (e.g., limit concurrent DB connections). `acquire()` / `release()`.
+5. **Atomic operations** — `AtomicInteger`, `compareAndSet`. When an atomic is enough vs when you need a full lock.
+6. **ConcurrentHashMap / thread-safe collections** — why `HashMap` is not thread-safe; segment-level locking in `ConcurrentHashMap`.
+7. **Producer-Consumer** — canonical pattern using `BlockingQueue` (`LinkedBlockingQueue`). Trace through put/take blocking semantics.
+8. **Read-Write Lock** — `ReentrantReadWriteLock`. Use when reads dominate and writes are rare.
 
-Because each scheduled task runs as its own Cowork session with access to the project folder, skill, and connectors, the brief is fully self-contained. Keep the Desktop app available for Desktop tasks; use a cloud task if reliability without the machine matters.
+**Problems (pick 1–2 for practice):**
+- Design a thread-safe LRU Cache (LC #146, concurrent variant)
+- Implement a Blocking Queue from scratch using `wait()/notifyAll()` or `Condition`
+- Dining Philosophers (deadlock illustration + fix with ordered lock acquisition)
+- Rate Limiter (token bucket, thread-safe)
 
----
+**LLD integration:** Every LLD session already has a Step 5 (concurrency). After this block, the user should reach that step naturally without prompting — they should proactively call out race conditions and state which primitive fixes them.
 
-## Part 11: Diagnostic Debrief & Variant Practice
-
-Self-rating (1-5) stays, but after each problem run a **short diagnostic debrief** — at most 3 quick conversational questions, never a form, ~30 seconds:
-
-1. "How did that land — solved it clean, needed a nudge, needed the pattern revealed, or didn't crack it?"
-2. "Where was the friction — spotting the approach, the implementation, edge cases, or complexity analysis?"
-3. (optional, only if useful) "Did the pattern jump out before I named it?"
-
-Record the answers compactly in the `tracker.csv` Notes and set confidence in `mastery.md` accordingly. Then **use them like a tutor**:
-
-- **Calibrate mastery:** clean + pattern recognized → higher confidence, `Practiced`/`Mastered`. Needed-the-pattern or stuck → `Needs Revision`.
-- **Queue a variant (the key mechanic):** if a topic was shaky, schedule a *different* problem of the **same pattern** 3–5 days out — a fresh variant, never the same problem (builds genuine comfort and avoids memorizing one solution). Add it to `tracker.csv` / `mastery.md` revisit. On that day frame it: "Same pattern as [X], new clothes — let's see it click faster." Rotate variety so the learner meets the pattern from several angles before it's marked mastered.
-- **Tailor the coaching focus per the friction signal:** consistent friction on *implementation* → drill clean coding and templates; on *approach* → drill pattern-recognition cues; on *edge cases* → build an edge-case checklist habit; on *complexity* → make them state TC/SC before coding.
-
-Over time these notes are how the tutor "knows" the learner: what trips them, what's solidifying, what variety to introduce next.
+Log the concurrency block as `Session Type: Concept+Practice` in `tracker.csv` with topic `Concurrency`.
 
 ---
 
-## Part 12: Weekly Feedback & Extra-Effort Suggestions
-
-During the weekend / weekly review, look across the week's diagnostics, completion rate, and any assessment result. Then decide whether extra effort is genuinely warranted:
-
-**Suggest ONE concrete extra-effort block only when truly needed** — i.e. any of:
-- Behind by a meaningful margin (missed/rest beyond the weekly allowance), or
-- A topic flagged weak 2+ times that week, or
-- An assessment score dipped or stalled vs the previous one.
-
-If so, propose a single, specific weekend add-on sized to the gap — e.g. "Graphs were shaky twice this week. Want to add a 90-min reinforcement block next Saturday — 2 fresh BFS/topo problems?" Keep it to one suggestion, concrete and time-boxed.
-
-**Gate it strictly.** If the week went fine, say so plainly and add nothing. This is **not** a weekly ritual — suggesting extra effort every week destroys its signal and burns the learner out. Most weeks should get a clean "on track, nothing to add."
-
-It's always the user's call. If he agrees, insert the extra block into `tracker.csv` on the chosen weekend (without disturbing other rows) and note it in `mastery.md`. If he declines, drop it without friction.
+## Part 11: T
