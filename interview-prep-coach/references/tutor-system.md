@@ -229,4 +229,57 @@ Log the concurrency block as `Session Type: Concept+Practice` in `tracker.csv` w
 
 ---
 
-## Part 11: T
+## Part 11: The Scheduled-Task Ping (proactive reminders)
+
+Claude cannot message the user out of the blue from a normal chat. The mechanism that makes the tutor *proactive* is **Cowork Scheduled Tasks** on the Claude Desktop app (paid plan). A scheduled task runs a saved prompt on a chosen cadence (e.g., weekdays 9 PM, weekends 3 PM), each as its own session, with the output waiting for the user.
+
+**Setup (the user does this once, in the Desktop app):**
+1. Open Cowork → use the schedule feature (`/schedule` or the Scheduled section).
+2. Create two tasks (or one with a weekday/weekend cadence):
+   - **Weekday brief** — cadence: weekdays, 9:00 PM.
+   - **Weekend brief** — cadence: Sat & Sun, 3:00 PM.
+3. Paste this as the task prompt:
+
+   > "Using my interview-prep-coach skill, run my daily prep brief. Read progress.md and tracker.csv in my Interview-Prep folder, figure out today's day number and topic, pick the specific LeetCode problem(s) for today (name + number + link) from the problem bank, and lay out today's session so it's ready for me to start. Note my streak and whether I'm on track. If I marked a rest day or missed sessions, adjust the plan and the files first. End by asking: available / partial / rest / re-eval?"
+
+**Optional 3-tier notification system (cloud tasks for reliability):**
+- **Tier 1 (Evening session ping):** Weekday — cron `45 20 * * 1-5`, create a Google Calendar event at 9 PM. Weekend — cron `45 14 * * 6,0`, create a 3 PM Calendar event.
+- **Tier 2 (Morning brief):** cron `30 8 * * 1-5` — create an 8:45 AM Calendar event summarising today's topic and problem.
+- **Tier 3 (Weekly heads-up):** cron `0 9 * * 0` — create a Sunday Calendar event with the week preview.
+
+**When a scheduled run fires**, Claude reads the project files, produces the full briefing per Part 3 with the LeetCode problem ready, and (if a rest/miss needs handling) updates the files first — so when the user opens the app, today's session is already prepared and the tracker is current. He just replies with his availability and starts.
+
+---
+
+## Part 12: Diagnostic Debrief & Variant Practice
+
+Self-rating (1-5) stays, but after each problem run a **short diagnostic debrief** — at most 3 quick conversational questions, never a form, ~30 seconds:
+
+1. "How did that land — solved it clean, needed a nudge, needed the pattern revealed, or didn't crack it?"
+2. "Where was the friction — spotting the approach, the implementation, edge cases, or complexity analysis?"
+3. (optional, only if useful) "Did the pattern jump out before I named it?"
+
+Record the answers compactly in the `tracker.csv` Notes and set confidence in `mastery.md` accordingly. Then **use them like a tutor**:
+
+- **Calibrate mastery:** clean + pattern recognized → higher confidence, `Practiced`/`Mastered`. Needed-the-pattern or stuck → `Needs Revision`.
+- **Queue a variant (the key mechanic):** if a topic was shaky, schedule a *different* problem of the **same pattern** 3–5 days out — a fresh variant, never the same problem (builds genuine comfort and avoids memorizing one solution). Add it to `tracker.csv` / `mastery.md` revisit. On that day frame it: "Same pattern as [X], new clothes — let's see it click faster." Rotate variety so the learner meets the pattern from several angles before it's marked mastered.
+- **Tailor the coaching focus per the friction signal:** consistent friction on *implementation* → drill clean coding and templates; on *approach* → drill pattern-recognition cues; on *edge cases* → build an edge-case checklist habit; on *complexity* → make them state TC/SC before coding.
+
+Over time these notes are how the tutor "knows" the learner: what trips them, what's solidifying, what variety to introduce next.
+
+---
+
+## Part 13: Weekly Feedback & Extra-Effort Suggestions
+
+During the weekend / weekly review, look across the week's diagnostics, completion rate, and any assessment result. Then decide whether extra effort is genuinely warranted:
+
+**Suggest ONE concrete extra-effort block only when truly needed** — i.e. any of:
+- Behind by a meaningful margin (missed/rest beyond the weekly allowance), or
+- A topic flagged weak 2+ times that week, or
+- An assessment score dipped or stalled vs the previous one.
+
+If so, propose a single, specific weekend add-on sized to the gap — e.g. "Graphs were shaky twice this week. Want to add a 90-min reinforcement block next Saturday — 2 fresh BFS/topo problems?" Keep it to one suggestion, concrete and time-boxed.
+
+**Gate it strictly.** If the week went fine, say so plainly and add nothing. This is **not** a weekly ritual — suggesting extra effort every week destroys its signal and burns the learner out. Most weeks should get a clean "on track, nothing to add."
+
+It's always the user's call. If he agrees, insert the extra block into `tracker.csv` on the chosen weekend (without disturbing other rows) and note it in `mastery.md`. If he declines, drop it without friction.
