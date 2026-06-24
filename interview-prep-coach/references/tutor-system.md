@@ -1,6 +1,6 @@
 # Tutor System: Methodology, Tracking & Adaptive Logic
 
-This file is the operating core of the tutor system. Read it at the start of any session that involves the daily briefing, progress logging, assessments, or re-planning. Problems come from `references/leetcode-bank.md` (real LeetCode problems by topic). See Part 8 for rest-day shifts, Part 9 for autonomy/permissions, Part 10 for the concurrency curriculum block, Part 11 for the scheduled-task ping.
+This file is the operating core of the tutor system. Read it at the start of any session that involves the daily briefing, progress logging, assessments, or re-planning. Problems come from `references/leetcode-bank.md` (real LeetCode problems by topic). See Part 2 for Sheet/Notion sync protocol, Part 7 for logging, Part 8 for rest-day shifts, Part 9 for autonomy/permissions, Part 10 for the concurrency block, Part 11 for scheduled-task ping.
 
 ---
 
@@ -28,29 +28,130 @@ The system blends two models:
 
 ---
 
-## Part 2: Tracking Setup (Cowork-native)
+## Part 2: Dual-Sync Tracking (Google Sheets primary + Local cache)
 
-**The user uses Cowork (this skill assumes Cowork)**, so the tracker is a set of **local files in the Cowork project folder** that Claude reads AND writes directly every session. No connectors, no paste step, no append limitations — full autonomy. This is the source of truth.
+### Architecture
 
-### The project folder
-On first run, create (or confirm) a Cowork project folder named **`Interview-Prep/`** and copy the skill's seed files into it:
-- **`tracker.csv`** — the date-mapped 67-day daily log (pre-seeded from `assets/tracker.csv`). Columns: Day #, Date, Week, Session Type, Planned Topic, Completed (Y/P/N/Rest), Time (min), Problems, Self-Rating (1-5), Notes.
-- **`progress.md`** — the at-a-glance dashboard (from `assets/progress.md`). Day #, streak, completion %, on-track status, weak areas, next-up. **Claude reads this FIRST on every run** and rewrites it at the end.
-- **`mastery.md`** — topic mastery table (from `assets/mastery.md`): Status, Confidence, Last Touched, Revisit By.
-- **`assessments.md`** — created on first test weekend: date, type, problems, score, weak areas, trend vs last.
-- **`weekly-reviews.md`** — appended each weekend with the retrospective block.
+| Layer | Role | Access |
+|-------|------|--------|
+| **Google Sheets** | Source of truth | Any device, phone, browser |
+| **Local files** | Session cache — rebuilt from Sheet each start | Cowork desktop only |
+| **Notion** | Optional read-only dashboard | Any device (if connector active) |
 
-To bootstrap, copy the three seed files from the skill's `assets/` directory into `Interview-Prep/`, then tell the user it's ready. If the files already exist, never overwrite — read them.
+Sheet always wins on conflict (phone-side edits are preserved). Local files exist for fast in-session reads/writes without API calls on every step.
 
-### How Claude uses the files (every session)
-- **Start:** read `progress.md` (state) + the relevant row(s) of `tracker.csv`.
-- **End:** edit `tracker.csv` to fill today's row (completed, time, problem solved, rating, notes), update `mastery.md` for topics touched, and rewrite `progress.md`. All done by Claude directly via file edits — the user does nothing.
-- This is the autonomy model: Claude owns the files; the user just shows up and answers the availability check.
+---
 
-### Optional: Notion mirror (nice-to-have, not required)
-If the user wants a pretty phone-friendly view, Claude can also maintain a Notion database mirror of the tracker (Notion is writable inside Cowork). This is purely a display convenience — the local files remain the source of truth. Only set this up if he asks; don't add the step otherwise (keep permissions/effort minimal).
+### Sheet structure
 
-### Weekly Review block (append to `weekly-reviews.md` each weekend)
+**Drive folder:** `Interview-Prep/` (created in root of user's Drive on first run)  
+**Spreadsheet name:** `SDE-Prep-Tracker`
+
+#### Config tab (key–value pairs)
+
+| Key | Example value |
+|-----|--------------|
+| Start Date | 2026-06-24 |
+| End Date | 2026-08-29 |
+| Total Days | 67 |
+| Role | Backend |
+| Target Level | SDE-2 |
+| Target Companies | Microsoft, Amazon |
+| Weekday Capacity (min) | 45 |
+| Weekend Capacity (hr) | 2.5 |
+| Current Day | 1 |
+| Current Streak | 0 |
+| Completion % | 0 |
+| On Track | Yes |
+| Problem Level | L2 |
+| Sheet ID | _(auto-filled at creation)_ |
+| Notion Page ID | _(filled if Notion connected)_ |
+
+#### Tracker tab (one row per plan day)
+
+`Day# | Date | Week | Session Type | Planned Topic | Completed | Time (min) | Problems | Rating (1–5) | Notes`
+
+- **Completed:** Y / P (partial) / N (miss) / Rest
+- **Session Type:** Regular / Assessment / Rest / Deload
+- Pre-populate all rows at setup with Date + Session Type from curriculum; fill Completed/Time/Problems/Rating/Notes at session end.
+
+#### Mastery tab
+
+`Topic | Status | Confidence (1–5) | Last Touched | Revisit By`
+
+- **Status:** Not Started / In Progress / Practiced / Needs Revision / Mastered
+- Pre-populate with all topics from `references/curriculum.md` in Not Started state at setup.
+
+#### Assessments tab
+
+`Date | Day# | Type | Problems Used (name + LC#) | Score (1–5) | Weak Areas | vs Last`
+
+- Append one row per assessment. Never edit past rows.
+
+#### Weekly Reviews tab
+
+`Week# | Date Range | Covered | Wins | Gaps | Assessment Score | Plan Adjustment`
+
+- Append one row per weekend review. Never edit past rows.
+
+---
+
+### First-run Sheet creation (automated)
+
+1. **Check connector.** Confirm the Google Drive/Sheets connector is active. If not, stop and tell the user: "Please connect the Google Drive connector from Cowork settings, then restart the session."
+2. **Create Drive folder** `Interview-Prep/` in root of user's Drive via the connector.
+3. **Create spreadsheet** `SDE-Prep-Tracker` in that folder. Create the 5 tabs (Config, Tracker, Mastery, Assessments, Weekly Reviews) and write column headers.
+4. **Populate Config tab** with the user's setup values collected during the setup interview.
+5. **Generate Tracker rows:** one per day from Start Date × Total Days. Pre-fill Date, Week#, Session Type (Regular / Assessment on weeks 2/4/6/8 end / Deload on week 5). Leave Completed/Time/Problems/Rating/Notes blank.
+6. **Populate Mastery tab** with all topics from `references/curriculum.md` — Status = Not Started, Confidence = blank, dates blank.
+7. **Store Sheet ID locally:** save `Interview-Prep/sheet-config.md` with:
+   ```
+   Sheet ID: <id>
+   Folder ID: <id>
+   Notion Page ID: (blank until Notion setup)
+   Created: <date>
+   ```
+8. **Create local cache files** by reading back the Sheet: generate `tracker.csv` (Tracker tab), `mastery.md` (Mastery tab), `progress.md` (from Config tab).
+9. **Optional Notion setup:** If the Notion connector is active, create a Notion page `Interview Prep — Progress` with a status table (Day #, Streak, Completion %, On Track, Weak Areas, Next Up). Store the page ID in `sheet-config.md`.
+
+---
+
+### Every session: start sync
+
+1. Read `Interview-Prep/sheet-config.md` for the Sheet ID.
+2. Via the Sheets connector, fetch:
+   - Config tab → rebuild `progress.md`
+   - Tracker tab (today's row + any rows since last local sync) → update `tracker.csv`
+   - Mastery tab (rows with Last Touched ≥ last local sync date) → update `mastery.md`
+3. **Conflict resolution:** Sheet wins. Overwrite local file rows with Sheet rows when they differ.
+4. Proceed with the daily briefing from the synced local files.
+
+**Offline fallback:** If the Sheets connector is unavailable, use local files as-is and note "offline session — will sync at next start."
+
+---
+
+### Every session: end sync
+
+Write to both layers in order:
+
+1. **Local files first** (fast, no API):
+   - Update today's row in `tracker.csv`
+   - Update touched topics in `mastery.md`
+   - Rewrite `progress.md`
+   - Weekends: append to `weekly-reviews.md`
+
+2. **Google Sheet second** (connector):
+   - Write today's Tracker row to the Tracker tab
+   - Write updated Mastery rows to the Mastery tab
+   - Update Config tab: Current Day, Streak, Completion %, On Track
+   - Weekends: append to Weekly Reviews tab
+
+3. **Notion (if connected):**
+   - Update the `Interview Prep — Progress` page: Day #, Streak, Completion %, Weak Areas, Next Up, Last Session summary.
+
+---
+
+### Weekly Review block (Tracker + Sheet + Notion)
 ```
 ## Week N Review (dates)
 - Covered: ...
@@ -59,6 +160,7 @@ If the user wants a pretty phone-friendly view, Claude can also maintain a Notio
 - Assessment score (if test weekend): ...
 - Plan adjustment for next week: ...
 ```
+Append to local `weekly-reviews.md` AND to the Weekly Reviews tab in the Sheet AND update the Notion page (if connected).
 
 ---
 
@@ -155,13 +257,29 @@ Alternate backend and frontend formats across assessments (Assessment 1 → back
 
 ## Part 7: Logging Discipline (do this every session)
 
-At the **end of every session**, Claude updates the project files directly (the user does nothing):
-1. **`tracker.csv`** — fill today's row: Completed (Y/P/N/Rest), Time, Problem(s) solved (name + #), Self-Rating (1-5), Notes.
+At the **end of every session**, Claude handles all sync automatically — the user does nothing.
+
+### Step 1: Local files (always, fast)
+1. **`tracker.csv`** — fill today's row: Completed (Y/P/N/Rest), Time, Problems solved (name + LC#), Self-Rating (1–5), Notes.
 2. **`mastery.md`** — update Status + Confidence + Last Touched for topics touched; set `Revisit By` (~5–7 days out) for anything weak.
-3. **`progress.md`** — rewrite Day #, streak, completion %, on-track status, weak areas, "Last session", "Next up".
+3. **`progress.md`** — rewrite: Day #, Streak, Completion %, On-Track, Weak Areas, "Last session", "Next up".
 4. Weekends: append the retrospective block to **`weekly-reviews.md`**.
 
-Then summarize in one line what was logged ("Day 9 done, sliding-window confidence 4, logged"), and close with the **commitment**: "Same time tomorrow? I'll have Day X ready." Keep it to one line — the files hold the detail. Never ask the user to edit the files himself.
+### Step 2: Google Sheet (always, via connector)
+1. **Tracker tab** — write today's row (same data as `tracker.csv` update).
+2. **Mastery tab** — write updated rows for touched topics.
+3. **Config tab** — update: Current Day, Current Streak, Completion %, On Track, Problem Level if changed.
+4. Weekends: append to **Weekly Reviews tab**.
+
+### Step 3: Notion (if connector active)
+Update the `Interview Prep — Progress` Notion page:
+- Status table: Day #, Streak, Completion %, On Track
+- Last session summary (1–2 lines)
+- Weak areas list
+- Next up
+
+### Close
+Summarize in one line: "Day 9 done, sliding-window confidence 4 — logged to Sheet and local files." Close with the commitment: "Same time tomorrow? I'll have Day X ready." Never ask the user to touch any file or sheet.
 
 ---
 
