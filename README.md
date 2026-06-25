@@ -26,7 +26,7 @@
 
 ### 1 — Install the skill
 
-Download [`interview-prep-coach.skill`](https://github.com/saurav4geeks/interview-prep-coach/releases) and install via **Settings → Skills → Install from file**.
+Download [`interview-prep-coach.skill`](https://github.com/saurav4geeks/interview-prep-coach/releases/latest) from the latest release and install via **Settings → Skills → Install from file**.
 
 ### 2 — Open a Cowork project
 
